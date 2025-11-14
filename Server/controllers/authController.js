@@ -10,10 +10,10 @@ export const signUp = async (req, res) => {
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: "User already exists" });
 
-    if (password.length < 6)
+    if (password.length < 4)
       return res
         .status(400)
-        .json({ message: "Password must be at least 6 characters long" });
+        .json({ message: "Password must be at least 4 characters long" });
 
     const mobileStr = String(mobile);
     if (mobileStr.length !== 10)
