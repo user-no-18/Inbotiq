@@ -1,37 +1,39 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../config/api';
 
 export default function Login() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        window.location.href = '/dashboard';
-      } else {
-        alert(data.message || 'Login failed');
+      console.log('Logging in with:', formData);
+      const response = await api.post('/auth/signin', formData);
+      console.log('Login response:', response.data);
+      
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        navigate('/dashboard');
       }
     } catch (error) {
-      alert('Error: ' + error.message);
+      console.error('Login error:', error.response || error);
+      const message = error.response?.data?.message || 'Login failed. Please try again.';
+      setError(message);
     }
   };
 
@@ -40,7 +42,13 @@ export default function Login() {
       <div className="bg-white p-8 rounded shadow-md w-96">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
         
-        <div className="space-y-4">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm mb-1">Email</label>
             <input
@@ -48,7 +56,7 @@ export default function Login() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500"
               required
             />
           </div>
@@ -60,22 +68,22 @@ export default function Login() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500"
               required
             />
           </div>
 
           <button
-            onClick={handleSubmit}
+            type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
           >
             Login
           </button>
-        </div>
+        </form>
 
         <p className="text-center text-sm mt-4">
           Don't have an account?{' '}
-          <a href="/signup" className="text-blue-600">Sign Up</a>
+          <a href="/signup" className="text-blue-600 hover:underline">Sign Up</a>
         </p>
       </div>
     </div>

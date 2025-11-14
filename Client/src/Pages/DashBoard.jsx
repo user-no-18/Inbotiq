@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../config/api';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -10,22 +13,13 @@ export default function Dashboard() {
 
   const fetchUser = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/user/current', {
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      } else {
-        window.location.href = '/login';
-      }
+      const response = await api.get('/user/current');
+      setUser(response.data.user);
     } catch (error) {
       console.error('Error:', error);
-      window.location.href = '/login';
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/login');
     } finally {
       setLoading(false);
     }
@@ -34,7 +28,7 @@ export default function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   if (loading) {
