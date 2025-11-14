@@ -1,0 +1,77 @@
+import { useState, useEffect } from 'react';
+
+export default function Dashboard() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  const fetchUser = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/user/current', {
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      } else {
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      window.location.href = '/login';
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <div className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-xl font-bold">
+            Welcome, {user?.fullName} ({user?.role === 'owner' ? 'Owner' : 'User'})
+          </h1>
+          <button
+            onClick={handleLogout}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-white p-6 rounded shadow">
+          <h2 className="text-lg font-bold mb-4">Dashboard</h2>
+          <div className="space-y-2">
+            <p><strong>Name:</strong> {user?.fullName}</p>
+            <p><strong>Email:</strong> {user?.email}</p>
+            <p><strong>Mobile:</strong> {user?.mobile}</p>
+            <p><strong>Role:</strong> {user?.role}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
